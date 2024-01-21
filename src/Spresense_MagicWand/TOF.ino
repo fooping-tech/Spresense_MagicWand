@@ -144,6 +144,7 @@ void TOF_Init(){
 //  TOF_spicommand(0x11, 1); // 5frames/s
   delay(500);
   TOF_spiskip(256);
+  Serial.println("TOF_Init_OK");
 }
 
 void TOF_main(){
