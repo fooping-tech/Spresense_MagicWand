@@ -25,7 +25,13 @@
     THE SOFTWARE.
 */
 
-#define RECORD_MODE 1//0:推論モード,1:学習モード
+//サブコア誤書き込み防止
+#ifdef SUBCORE
+#error "Core selection is wrong!!"
+#endif
+
+
+#define RECORD_MODE 0//0:推論モード,1:学習モード
 //SD
 #include <SDHCI.h>
 SDClass  SD;
@@ -84,6 +90,10 @@ DNNVariable input(DNN_DATA_WIDTH*DNN_DATA_HEIGHT);
 static String const labels[4]= {"EIGHT", "CIRCLE", "MINUS", "NON"};
 int command =3;
 
+//INTERFACE to M5ATOM
+#define OUTPUT1_PIN 27
+#define OUTPUT2_PIN 20
+
 //mode
 // モードの列挙型
 enum MODE {
@@ -122,7 +132,7 @@ static void audio_attention_cb(const ErrorAttentionParam *atprm)
 File myFile;
 bool audio=false;
 void PlaySound(int i){
-    /* Open file placed on SD card */
+    //
   if(i==1)myFile = SD.open("audio1.mp3");
   else if(i==2)myFile = SD.open("audio2.mp3");
   else if(i==3)myFile = SD.open("audio3.mp3");
@@ -176,17 +186,47 @@ int CheckCommand(){
   return index;
 }
 
+void InterfaceOutput(MODE m){
+  switch (m) {
+  case MODE1:
+    digitalWrite(OUTPUT1_PIN, LOW);
+    digitalWrite(OUTPUT2_PIN, LOW);
+    break;
+
+  case MODE2:
+    digitalWrite(OUTPUT1_PIN, LOW);
+    digitalWrite(OUTPUT2_PIN, HIGH);
+    break;
+
+  case MODE3:
+    digitalWrite(OUTPUT1_PIN, HIGH);
+    digitalWrite(OUTPUT2_PIN, LOW);    
+    break;
+
+  case MODE4:
+    digitalWrite(OUTPUT1_PIN, HIGH);
+    digitalWrite(OUTPUT2_PIN, HIGH);
+    break;
+  }
+}
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+
+  //INTERFACE
+  pinMode(OUTPUT1_PIN,OUTPUT);
+  pinMode(OUTPUT2_PIN,OUTPUT);
+  digitalWrite(OUTPUT1_PIN, HIGH);
+  digitalWrite(OUTPUT2_PIN, HIGH);
+/*
   //TFT
   TFT_Init();
   
   switch1 = new SW(PIN_D21,INPUT_PULLUP);
   //タイマ割り込み
   attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
-
+  
   //CANVAS(tft,w,h,x,y)
   canvas1 = new CANVAS(&tft,80,40,20,240);      //ToFText
   canvas2 = new CANVAS(&tft,20,40,0,240);       //ToFドット
@@ -212,6 +252,7 @@ void setup() {
   //MadgWick
   MadgWick_Init();
 
+
   //SD
   SD.begin();
   //USB MSC
@@ -231,18 +272,19 @@ void setup() {
   theAudio = AudioClass::getInstance();
   theAudio->begin(audio_attention_cb);
   puts("initialization Audio Library");
-  /* Set clock mode to normal ハイレゾかノーマルを選択*/
+  // Set clock mode to normal ハイレゾかノーマルを選択
   theAudio->setRenderingClockMode(AS_CLKMODE_NORMAL);
-  /*select LINE OUT */
+  //select LINE OUT
   theAudio->setPlayerMode(AS_SETPLAYER_OUTPUTDEVICE_SPHP, AS_SP_DRV_MODE_LINEOUT);
-  /*init player DSPファイルはmicroSD カードの場合は "/mnt/sd0/BIN" を、SPI-Flash の場合は "/mnt/spif/BIN" を指定します。*/
+  //init player DSPファイルはmicroSD カードの場合は "/mnt/sd0/BIN" を、SPI-Flash の場合は "/mnt/spif/BIN" を指定します。
   err_t err = theAudio->initPlayer(AudioClass::Player0, AS_CODECTYPE_MP3, "/mnt/sd0/BIN", AS_SAMPLINGRATE_AUTO, AS_CHANNEL_STEREO);
-  /* Verify player initialize */
+  // Verify player initialize 
   if (err != AUDIOLIB_ECODE_OK)
     {
       printf("Player0 initialize error\n");
       exit(1);
     }
+  */
     
 }
 
@@ -276,6 +318,18 @@ void mainloop(MODE m){
   //経過時間を計算
   spentTime = millis() - startTime;
 
+  if(spentTime > 2000){
+    if(m == MODE1){
+      currentMode = MODE2;
+    }else if(m == MODE2){
+      currentMode = MODE3;
+    }else if(m == MODE3){
+      currentMode = MODE4;
+    }else if(m == MODE4){
+      currentMode = MODE1;
+    }
+
+  }
   if(deltaTime >= TaskSpan){
 //    Serial.println("mainloop");
     if(!_InitCondition){//未初期化時実行
@@ -287,9 +341,11 @@ void mainloop(MODE m){
     }else{
 //      Serial.println("main()");
         //モードごとの処理
+        InterfaceOutput(m);
+        Serial.print("mode: ");
+      Serial.println(m);
     switch (m) {
       case MODE1:
-        //TOF_SetLED(255,255,255);      
         break;
 
       case MODE2:
@@ -298,12 +354,12 @@ void mainloop(MODE m){
 
       case MODE3:
         //TOF_SetLED(0,255,0);
-        currentMode = MODE4;
+        //currentMode = MODE4;
         
         break;
 
       case MODE4:
-        TOF_SetLED(0,0,0);
+        //TOF_SetLED(0,0,0);
         break;
       }
       
@@ -327,22 +383,22 @@ void InitFunction(MODE m){//初回呼ぶ
   //モードごとの処理
   switch (m) {
   case MODE1:
-    TOF_SetLED(255,255,255);
-    PlaySound(1);
+    //TOF_SetLED(255,255,255);
+    //PlaySound(1);
     break;
 
   case MODE2:
-    TOF_SetLED(255,0,0);
-    PlaySound(2);
+    //TOF_SetLED(255,0,0);
+    //PlaySound(2);
     break;
 
   case MODE3:
-    TOF_SetLED(0,255,0);
-    PlaySound(3);
+    //TOF_SetLED(0,255,0);
+    //PlaySound(3);
     break;
 
   case MODE4:
-    TOF_SetLED(0,0,0);
+    //TOF_SetLED(0,0,0);
     break;
 }
   startTime = millis();
@@ -371,6 +427,7 @@ void Audio_main(){
 
 
 void loop() {
+  /*
   IMU_main();         //IMUセンサ値更新
   TOF_main();         //TOFセンサ値更新
   AK09918_main();     //地磁気センサ更新
@@ -378,6 +435,7 @@ void loop() {
   if(RECORD_MODE == 0)command = CheckCommand(); //DNN
   SW_main();         //ボタンチェック(押下時Reset処理)
   Audio_main();      //オーディオ
+
   Serial_main();      //Arduinoシリアル操作
 
   //モード起動時処理
@@ -397,7 +455,6 @@ void loop() {
       }
     }
   }
-  mainloop(currentMode);
 
   //所定の加速度より早い場合キャンバスを消す
   if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>1.5){
@@ -405,6 +462,8 @@ void loop() {
     //currentMode = MODE4;
     ResetCanvas();
   }
+    */
+  mainloop(currentMode);
 
 
 }
