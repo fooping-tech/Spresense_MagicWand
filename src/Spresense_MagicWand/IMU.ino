@@ -31,6 +31,7 @@ float acc_offsetZ = 0;
 
 
 void IMU_Init(){
+  Serial.println("IMU_Init");
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     while (1);
@@ -64,6 +65,8 @@ void IMU_Init(){
 
   IMU_Reset();
   Serial.println("Finish");
+  Serial.println("IMU_Init_OK");
+
 }
 //ジャイロセンサの平均値を求める
 void IMU_CalcAverage(float valueX,float valueY,float valueZ){
