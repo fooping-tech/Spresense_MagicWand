@@ -25,7 +25,7 @@
     THE SOFTWARE.
 */
 
-#define RECORD_MODE 1//0:推論モード,1:学習モード
+#define RECORD_MODE 0//0:推論モード,1:学習モード
 //SD
 #include <SDHCI.h>
 SDClass  SD;
