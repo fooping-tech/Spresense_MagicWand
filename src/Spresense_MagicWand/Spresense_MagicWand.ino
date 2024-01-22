@@ -195,6 +195,23 @@ void setup() {
   canvas5 = new CANVAS(&tft,240,280,0,280);   //テキスト
   canvas6 = new CANVAS(&tft,140,40,100,240);      //Text
 
+
+  //SD
+  SD.begin();
+  //USB MSC
+  if (SD.beginUsbMsc()) {
+    Serial.println("USB MSC Failure!");
+  } else {
+    Serial.println("*** USB MSC Prepared! ***");
+    Serial.println("Insert SD and Connect Extension Board USB to PC.");
+  }
+  //DNN
+  File nnbfile = SD.open("model.nnb");
+  int ret = dnnrt.begin(nnbfile);
+  if (ret < 0) {
+    Serial.println("dnnrt.begin failed" + String(ret));
+  }
+  
   //ToF
   SPI5.begin();
   SPI5.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
@@ -212,21 +229,6 @@ void setup() {
   //MadgWick
   MadgWick_Init();
 
-  //SD
-  SD.begin();
-  //USB MSC
-  if (SD.beginUsbMsc()) {
-    Serial.println("USB MSC Failure!");
-  } else {
-    Serial.println("*** USB MSC Prepared! ***");
-    Serial.println("Insert SD and Connect Extension Board USB to PC.");
-  }
-  //DNN
-  File nnbfile = SD.open("model.nnb");
-  int ret = dnnrt.begin(nnbfile);
-  if (ret < 0) {
-    Serial.println("dnnrt.begin failed" + String(ret));
-  }
   //Audio
   theAudio = AudioClass::getInstance();
   theAudio->begin(audio_attention_cb);
