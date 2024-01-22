@@ -219,14 +219,14 @@ void setup() {
   pinMode(OUTPUT2_PIN,OUTPUT);
   digitalWrite(OUTPUT1_PIN, HIGH);
   digitalWrite(OUTPUT2_PIN, HIGH);
-/*
+
   //TFT
   TFT_Init();
   
   switch1 = new SW(PIN_D21,INPUT_PULLUP);
   //タイマ割り込み
   attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
-  
+/*  
   //CANVAS(tft,w,h,x,y)
   canvas1 = new CANVAS(&tft,80,40,20,240);      //ToFText
   canvas2 = new CANVAS(&tft,20,40,0,240);       //ToFドット
@@ -239,7 +239,7 @@ void setup() {
   SPI5.begin();
   SPI5.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
   TOF_Init();
-
+*/
   //IMU
   IMU_Init();
 
@@ -342,8 +342,6 @@ void mainloop(MODE m){
 //      Serial.println("main()");
         //モードごとの処理
         InterfaceOutput(m);
-        Serial.print("mode: ");
-      Serial.println(m);
     switch (m) {
       case MODE1:
         break;
@@ -427,10 +425,10 @@ void Audio_main(){
 
 
 void loop() {
-  /*
+  
   IMU_main();         //IMUセンサ値更新
-  TOF_main();         //TOFセンサ値更新
-  AK09918_main();     //地磁気センサ更新
+  //TOF_main();         //TOFセンサ値更新
+  //AK09918_main();     //地磁気センサ更新
   CANVAS_main();      //描画更新
   if(RECORD_MODE == 0)command = CheckCommand(); //DNN
   SW_main();         //ボタンチェック(押下時Reset処理)
@@ -462,7 +460,7 @@ void loop() {
     //currentMode = MODE4;
     ResetCanvas();
   }
-    */
+    
   mainloop(currentMode);
 
 
