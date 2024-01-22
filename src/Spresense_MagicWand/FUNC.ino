@@ -222,7 +222,7 @@ void SaveCSV(){
     for (int j=0;j<28;j++) {
       myFile.print(canvas4->output[i + 28 * j]);
       //Serial.print(canvas4->output[i + 28 * j]);
-      myFile.print(",");
+      if(j!=27)myFile.print(",");
       //Serial.print(",");
     }
     myFile.println("");
