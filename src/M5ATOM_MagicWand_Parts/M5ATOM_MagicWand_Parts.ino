@@ -57,13 +57,14 @@ void mainloop(MODE m){
 
       case MODE2:
         //TOF_SetLED(255,0,0);
-        led.fire2(1,200);
+        //led.fire2(1,200);
+        led.flash(100);
         break;
 
       case MODE3:
         //TOF_SetLED(0,255,0);
         //currentMode = MODE4;
-        led.fire2(0,0);
+        led.flash(200);
         break;
 
       case MODE4:
