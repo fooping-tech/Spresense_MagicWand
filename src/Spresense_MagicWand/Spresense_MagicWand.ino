@@ -31,29 +31,29 @@
 #endif
 
 
-#define RECORD_MODE 0//0:推論モード,1:学習モード
+#define RECORD_MODE 0  //0:推論モード,1:学習モード
 //SD
-#include <SDHCI.h>
-SDClass  SD;
+//#include <SDHCI.h>
+//SDClass SD;
 #include <File.h>
-
+#include <Flash.h>
 //IMU
 #include "Arduino_BMI270_BMM150.h"
 
 //TFT
-#define TFT_LED 8       //LED接続端子
-#define LGFX_AUTODETECT // 自動認識
+#define TFT_LED 8        //LED接続端子
+#define LGFX_AUTODETECT  // 自動認識
 #include <LovyanGFX.hpp>
 #include "LGFX_SPRESENSE.hpp"
-#include <LGFX_AUTODETECT.hpp>        // クラス"LGFX"を準備します
-static LGFX_SPRESENSE_SPI_ILI9341 tft;// LGFXのインスタンスを作成
+#include <LGFX_AUTODETECT.hpp>          // クラス"LGFX"を準備します
+static LGFX_SPRESENSE_SPI_ILI9341 tft;  // LGFXのインスタンスを作成
 
 //ToF
-#include <SPI.h>
+//#include <SPI.h>
 
 //Canvas
 #include "CANVAS.h"
-CANVAS *canvas1;
+//CANVAS *canvas1;
 CANVAS *canvas2;
 CANVAS *canvas3;
 CANVAS *canvas4;
@@ -66,8 +66,8 @@ CANVAS *canvas6;
 AK09918_err_type_t err;
 int32_t x, y, z;
 AK09918 ak09918;
-int mx,my,mz;
-int mx0,my0,mz0;
+int mx, my, mz;
+int mx0, my0, mz0;
 
 //SW
 #include "SW.h"
@@ -75,10 +75,10 @@ SW *switch1;
 
 //MadgWick
 #include <MadgwickAHRS.h>
-#define INTERVAL 100000 //us
-float roll=0;
-float pitch=0;
-float heading=0;
+#define INTERVAL 100000  //us
+float roll = 0;
+float pitch = 0;
+float heading = 0;
 Madgwick *filter;
 
 //DNN
@@ -86,9 +86,9 @@ Madgwick *filter;
 DNNRT dnnrt;
 #define DNN_DATA_WIDTH 28
 #define DNN_DATA_HEIGHT 28
-DNNVariable input(DNN_DATA_WIDTH*DNN_DATA_HEIGHT);
-static String const labels[4]= {"EIGHT", "CIRCLE", "MINUS", "NON"};
-int command =3;
+DNNVariable input(DNN_DATA_WIDTH *DNN_DATA_HEIGHT);
+static String const labels[4] = { "EIGHT", "CIRCLE", "MINUS", "NON" };
+int command = 3;
 
 //INTERFACE to M5ATOM
 #define OUTPUT1_PIN 27
@@ -105,61 +105,59 @@ enum MODE {
 MODE currentMode = MODE4;
 MODE beforeMode = MODE4;
 
-int TaskSpan;       //タスク実行間隔
-uint32_t startTime; //開始時間
-uint32_t cycleTime; //サイクルタイム
-uint32_t deltaTime; //
-uint32_t spentTime; //経過時間
-bool _InitCondition=false;  //初期化状態
-bool _DeinitCondition=false;  //終了時状態
+int TaskSpan;                   //タスク実行間隔
+uint32_t startTime;             //開始時間
+uint32_t cycleTime;             //サイクルタイム
+uint32_t deltaTime;             //
+uint32_t spentTime;             //経過時間
+bool _InitCondition = false;    //初期化状態
+bool _DeinitCondition = false;  //終了時状態
 
 
 //Audio
+/*
 #include <Audio.h>
 AudioClass *theAudio;
 bool ErrEnd = false;
 
-static void audio_attention_cb(const ErrorAttentionParam *atprm)
-{
+static void audio_attention_cb(const ErrorAttentionParam *atprm) {
   puts("Attention!");
-  
-  if (atprm->error_code >= AS_ATTENTION_CODE_WARNING)
-    {
-      ErrEnd = true;
-   }
-}
 
+  if (atprm->error_code >= AS_ATTENTION_CODE_WARNING) {
+    ErrEnd = true;
+  }
+}
+*/
+
+/*
 File myFile;
-bool audio=false;
-void PlaySound(int i){
-    //
-  if(i==1)myFile = SD.open("audio1.mp3");
-  else if(i==2)myFile = SD.open("audio2.mp3");
-  else if(i==3)myFile = SD.open("audio3.mp3");
-  
-  if (!myFile)
-    {
-      printf("File open error\n");
-      exit(1);
-    }
+bool audio = false;
+void PlaySound(int i) {
+  //
+  if (i == 1) myFile = SD.open("audio1.mp3");
+  else if (i == 2) myFile = SD.open("audio2.mp3");
+  else if (i == 3) myFile = SD.open("audio3.mp3");
+
+  if (!myFile) {
+    printf("File open error\n");
+    exit(1);
+  }
   Serial.println(myFile.name());
 
-  /* Send first frames to be decoded */
+  // Send first frames to be decoded
   err_t err = theAudio->writeFrames(AudioClass::Player0, myFile);
 
-  if (err == AUDIOLIB_ECODE_FILEEND)
-  {
+  if (err == AUDIOLIB_ECODE_FILEEND) {
     theAudio->stopPlayer(AudioClass::Player0);
   }
-  if ((err != AUDIOLIB_ECODE_OK) && (err != AUDIOLIB_ECODE_FILEEND))
-    {
-      printf("File Read Error! =%d\n",err);
-      myFile.close();
-      exit(1);
-    }
+  if ((err != AUDIOLIB_ECODE_OK) && (err != AUDIOLIB_ECODE_FILEEND)) {
+    printf("File Read Error! =%d\n", err);
+    myFile.close();
+    exit(1);
+  }
 
 
-  /* Main volume set -1020 to 120 */
+  // Main volume set -1020 to 120
   theAudio->setVolume(120);
 
   theAudio->startPlayer(AudioClass::Player0);
@@ -168,17 +166,18 @@ void PlaySound(int i){
   myFile.close();
   //usleep(40000);
 }
-int CheckCommand(){
+*/
+int CheckCommand() {
   float *dnnbuf = input.data();
-  int count=0;
-  for (int i=0;i<DNN_DATA_WIDTH;i++) {
-    for (int j=0;j<DNN_DATA_HEIGHT;j++) {
+  int count = 0;
+  for (int i = 0; i < DNN_DATA_WIDTH; i++) {
+    for (int j = 0; j < DNN_DATA_HEIGHT; j++) {
       dnnbuf[count] = canvas4->output[i + 28 * j];
       count++;
     }
   }
 
-  dnnrt.inputVariable(input,0);
+  dnnrt.inputVariable(input, 0);
   dnnrt.forward();
 
   DNNVariable output = dnnrt.outputVariable(0);
@@ -186,27 +185,27 @@ int CheckCommand(){
   return index;
 }
 
-void InterfaceOutput(MODE m){
+void InterfaceOutput(MODE m) {
   switch (m) {
-  case MODE1:
-    digitalWrite(OUTPUT1_PIN, LOW);
-    digitalWrite(OUTPUT2_PIN, LOW);
-    break;
+    case MODE1:
+      digitalWrite(OUTPUT1_PIN, LOW);
+      digitalWrite(OUTPUT2_PIN, LOW);
+      break;
 
-  case MODE2:
-    digitalWrite(OUTPUT1_PIN, LOW);
-    digitalWrite(OUTPUT2_PIN, HIGH);
-    break;
+    case MODE2:
+      digitalWrite(OUTPUT1_PIN, LOW);
+      digitalWrite(OUTPUT2_PIN, HIGH);
+      break;
 
-  case MODE3:
-    digitalWrite(OUTPUT1_PIN, HIGH);
-    digitalWrite(OUTPUT2_PIN, LOW);    
-    break;
+    case MODE3:
+      digitalWrite(OUTPUT1_PIN, HIGH);
+      digitalWrite(OUTPUT2_PIN, LOW);
+      break;
 
-  case MODE4:
-    digitalWrite(OUTPUT1_PIN, HIGH);
-    digitalWrite(OUTPUT2_PIN, HIGH);
-    break;
+    case MODE4:
+      digitalWrite(OUTPUT1_PIN, HIGH);
+      digitalWrite(OUTPUT2_PIN, HIGH);
+      break;
   }
 }
 
@@ -215,26 +214,26 @@ void setup() {
   Serial.begin(115200);
 
   //INTERFACE
-  pinMode(OUTPUT1_PIN,OUTPUT);
-  pinMode(OUTPUT2_PIN,OUTPUT);
+  pinMode(OUTPUT1_PIN, OUTPUT);
+  pinMode(OUTPUT2_PIN, OUTPUT);
   digitalWrite(OUTPUT1_PIN, HIGH);
   digitalWrite(OUTPUT2_PIN, HIGH);
 
   //TFT
   TFT_Init();
-  
-  switch1 = new SW(PIN_D21,INPUT_PULLUP);
+
+  switch1 = new SW(PIN_D21, INPUT_PULLUP);
   //タイマ割り込み
-  attachTimerInterrupt(TimerInterruptFunction,INTERVAL);
-/*  
+  attachTimerInterrupt(TimerInterruptFunction, INTERVAL);
+  
   //CANVAS(tft,w,h,x,y)
-  canvas1 = new CANVAS(&tft,80,40,20,240);      //ToFText
-  canvas2 = new CANVAS(&tft,20,40,0,240);       //ToFドット
+  //canvas1 = new CANVAS(&tft,80,40,20,240);      //ToFText
+  //canvas2 = new CANVAS(&tft,20,40,0,240);       //ToFドット
   //canvas3 = new CANVAS(&tft,140,40,100,240);    //グラフ
   canvas4 = new CANVAS(&tft,240,240,0,0);    //杖軌跡
-  canvas5 = new CANVAS(&tft,240,280,0,280);   //テキスト
-  canvas6 = new CANVAS(&tft,140,40,100,240);      //Text
-
+  //canvas5 = new CANVAS(&tft,240,280,0,280);   //テキスト
+  //canvas6 = new CANVAS(&tft,140,40,100,240);      //Text
+/*
   //ToF
   SPI5.begin();
   SPI5.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
@@ -253,21 +252,24 @@ void setup() {
   MadgWick_Init();
 
 
-  //SD
-  SD.begin();
+  //SD->Flash
+  Flash.begin();
   //USB MSC
+  /*
   if (SD.beginUsbMsc()) {
     Serial.println("USB MSC Failure!");
   } else {
     Serial.println("*** USB MSC Prepared! ***");
     Serial.println("Insert SD and Connect Extension Board USB to PC.");
   }
+  */
   //DNN
-  File nnbfile = SD.open("model.nnb");
+  File nnbfile = Flash.open("model.nnb");
   int ret = dnnrt.begin(nnbfile);
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));
   }
+  /*
   //Audio
   theAudio = AudioClass::getInstance();
   theAudio->begin(audio_attention_cb);
@@ -278,176 +280,177 @@ void setup() {
   theAudio->setPlayerMode(AS_SETPLAYER_OUTPUTDEVICE_SPHP, AS_SP_DRV_MODE_LINEOUT);
   //init player DSPファイルはmicroSD カードの場合は "/mnt/sd0/BIN" を、SPI-Flash の場合は "/mnt/spif/BIN" を指定します。
   err_t err = theAudio->initPlayer(AudioClass::Player0, AS_CODECTYPE_MP3, "/mnt/sd0/BIN", AS_SAMPLINGRATE_AUTO, AS_CHANNEL_STEREO);
-  // Verify player initialize 
-  if (err != AUDIOLIB_ECODE_OK)
-    {
-      printf("Player0 initialize error\n");
-      exit(1);
-    }
+  // Verify player initialize
+  if (err != AUDIOLIB_ECODE_OK) {
+    printf("Player0 initialize error\n");
+    exit(1);
+  }
   */
-    
 }
 
 
-void CANVAS_main(){
+void CANVAS_main() {
   //ToFセンサテキスト描画
-  int* range = TOF_ReadDistance3d();
-  canvas1->StringDrawL(String(TOF_ReadDistance())+"mm",TFT_WHITE);
+  //int *range = TOF_ReadDistance3d();
+  //canvas1->StringDrawL(String(TOF_ReadDistance()) + "mm", TFT_WHITE);
   //ToFセンサドット描画
-  canvas2->DotDraw(range);
+  //canvas2->DotDraw(range);
   //姿勢グラフ描画
   //float value1[] = {roll,pitch,heading};
   //canvas3->GraphDraw(value1);
   //杖軌跡描画
-  canvas4->WandDraw28(heading,roll);
+  canvas4->WandDraw28(heading, roll);
   //IMU,地磁気センサ値テキスト描画
-  canvas5->StringDraw("aX="+ String(IMU_ReadAccX())+",aY="+String(IMU_ReadAccY())+",aZ="+String(IMU_ReadAccZ())+"\ngX="+ String(IMU_ReadGyroX())+",gY="+String(IMU_ReadGyroY())+",gZ="+String(IMU_ReadGyroZ())+"\nmX="+ String(mx)+",mY="+String(my)+",mZ="+String(mz), TFT_YELLOW);
+  //canvas5->StringDraw("aX=" + String(IMU_ReadAccX()) + ",aY=" + String(IMU_ReadAccY()) + ",aZ=" + String(IMU_ReadAccZ()) + "\ngX=" + String(IMU_ReadGyroX()) + ",gY=" + String(IMU_ReadGyroY()) + ",gZ=" + String(IMU_ReadGyroZ()) + "\nmX=" + String(mx) + ",mY=" + String(my) + ",mZ=" + String(mz), TFT_YELLOW);
   //
-  canvas6->StringDrawL(String(labels[command])+"",TFT_WHITE);
+  //canvas6->StringDrawL(String(labels[command]) + "", TFT_WHITE);
 }
 
 
 
 
-void mainloop(MODE m){
+void mainloop(MODE m) {
   //前回実行時からモードが変わってたら終了処理
-  if(beforeMode != m)DeinitActive();
+  if (beforeMode != m) DeinitActive();
   beforeMode = m;
-   //前回実行時からの経過時間を計算
+  //前回実行時からの経過時間を計算
   deltaTime = millis() - cycleTime;
   //経過時間を計算
   spentTime = millis() - startTime;
 
-  if(spentTime > 2000){
-    if(m == MODE1){
-      currentMode = MODE2;
-    }else if(m == MODE2){
-      currentMode = MODE3;
-    }else if(m == MODE3){
-      currentMode = MODE4;
-    }else if(m == MODE4){
-      currentMode = MODE1;
-    }
-
-  }
-  if(deltaTime >= TaskSpan){
-//    Serial.println("mainloop");
-    if(!_InitCondition){//未初期化時実行
-//      Serial.println("Init");
+  if (deltaTime >= TaskSpan) {
+    //    Serial.println("mainloop");
+    if (!_InitCondition) {  //未初期化時実行
+                            //      Serial.println("Init");
       InitFunction(m);
-    }else if(_DeinitCondition){//修了処理時実行
-//      Serial.println("Deinit");
+    } else if (_DeinitCondition) {  //修了処理時実行
+                                    //      Serial.println("Deinit");
       DeinitFunction();
-    }else{
-//      Serial.println("main()");
-        //モードごとの処理
-        InterfaceOutput(m);
-    switch (m) {
-      case MODE1:
-        break;
+    } else {
+      //      Serial.println("main()");
+      //モードごとの処理
+      InterfaceOutput(m);
+      Serial.println(m);
+      switch (m) {
+        case MODE1:
+          break;
 
-      case MODE2:
-        //TOF_SetLED(255,0,0);
-        break;
+        case MODE2:
+          //TOF_SetLED(255,0,0);
+          break;
 
-      case MODE3:
-        //TOF_SetLED(0,255,0);
-        //currentMode = MODE4;
-        
-        break;
+        case MODE3:
+          //TOF_SetLED(0,255,0);
+          currentMode = MODE4;
 
-      case MODE4:
-        //TOF_SetLED(0,0,0);
-        break;
+          break;
+
+        case MODE4:
+          //TOF_SetLED(0,0,0);
+          break;
       }
-      
     }
     //cycleTimeリセット
     cycleTime = millis();
   }
 }
 
-void DeinitActive(){//モード終了時に呼ぶ
+void DeinitActive() {  //モード終了時に呼ぶ
   startTime = millis();
   //モードごとの処理
-  _DeinitCondition=true;
+  _DeinitCondition = true;
 }
-void DeinitFunction(){//最後に呼ばれる
-  
-  _InitCondition=false;  //初期化状態
-  _DeinitCondition=false;  //終了時状態
+void DeinitFunction() {  //最後に呼ばれる
+
+  _InitCondition = false;    //初期化状態
+  _DeinitCondition = false;  //終了時状態
 }
-void InitFunction(MODE m){//初回呼ぶ
+void InitFunction(MODE m) {  //初回呼ぶ
   //モードごとの処理
   switch (m) {
-  case MODE1:
-    //TOF_SetLED(255,255,255);
-    //PlaySound(1);
-    break;
+    case MODE1:
+      //TOF_SetLED(255,255,255);
+      //PlaySound(1);
+      ledOn(LED0);
+      ledOff(LED1);
+      ledOff(LED2);
+      ledOff(LED3);
+      break;
 
-  case MODE2:
-    //TOF_SetLED(255,0,0);
-    //PlaySound(2);
-    break;
+    case MODE2:
+      //TOF_SetLED(255,0,0);
+      //PlaySound(2);
+      ledOff(LED0);
+      ledOn(LED1);
+      ledOff(LED2);
+      ledOff(LED3);
+      break;
 
-  case MODE3:
-    //TOF_SetLED(0,255,0);
-    //PlaySound(3);
-    break;
+    case MODE3:
+      //TOF_SetLED(0,255,0);
+      //PlaySound(3);
+      ledOff(LED0);
+      ledOff(LED1);
+      ledOn(LED2);
+      ledOff(LED3);
+      break;
 
-  case MODE4:
-    //TOF_SetLED(0,0,0);
-    break;
-}
+    case MODE4:
+      //TOF_SetLED(0,0,0);
+      ledOff(LED0);
+      ledOff(LED1);
+      ledOff(LED2);
+      ledOn(LED3);
+
+      break;
+  }
   startTime = millis();
-  _InitCondition=true;  //初回フラグon
+  _InitCondition = true;  //初回フラグon
 }
-
-void Audio_main(){
+/*
+void Audio_main() {
   int err = theAudio->writeFrames(AudioClass::Player0, myFile);
-  /*  Tell when player file ends */
-  if (err == AUDIOLIB_ECODE_FILEEND)
-    {
-      //printf("Main player File End!\n");
-    }
+  //  Tell when player file ends 
+  if (err == AUDIOLIB_ECODE_FILEEND) {
+    //printf("Main player File End!\n");
+  }
 
-  /* Show error code from player and stop */
-  if (err)
-    {
-      //printf("Main player error code: %d\n", err);
-      if(audio == true){
-        theAudio->stopPlayer(AudioClass::Player0);
-        myFile.close();
-        audio = false;
-      }
+  // Show error code from player and stop
+  if (err) {
+    //printf("Main player error code: %d\n", err);
+    if (audio == true) {
+      theAudio->stopPlayer(AudioClass::Player0);
+      myFile.close();
+      audio = false;
     }
+  }
 }
-
+*/
 
 void loop() {
-  
-  IMU_main();         //IMUセンサ値更新
+
+  IMU_main();  //IMUセンサ値更新
   //TOF_main();         //TOFセンサ値更新
   //AK09918_main();     //地磁気センサ更新
-  CANVAS_main();      //描画更新
-  if(RECORD_MODE == 0)command = CheckCommand(); //DNN
-  SW_main();         //ボタンチェック(押下時Reset処理)
-  Audio_main();      //オーディオ
+  CANVAS_main();                                   //描画更新
+  if (RECORD_MODE == 0) command = CheckCommand();  //DNN
+  SW_main();                                       //ボタンチェック(押下時Reset処理)
+  //Audio_main();                                    //オーディオ
 
-  Serial_main();      //Arduinoシリアル操作
+  Serial_main();  //Arduinoシリアル操作
 
   //モード起動時処理
-  if(RECORD_MODE == 0){
-    if(IMU_CheckAccActive()&& TOF_ReadDistance()>50){
-      if(command==0){
+  if (RECORD_MODE == 0) {
+    if (IMU_CheckAccActive()) {
+      if (command == 0) {
         currentMode = MODE1;
         ResetCanvas();
       }
-      if(command==1){
+      if (command == 1) {
         currentMode = MODE2;
         ResetCanvas();
       }
-      if(command==2){
+      if (command == 2) {
         currentMode = MODE3;
         ResetCanvas();
       }
@@ -455,14 +458,11 @@ void loop() {
   }
 
   //所定の加速度より早い場合キャンバスを消す
-  if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>1.5){
+  if (IMU_CalcAccVec(IMU_ReadAccX(), IMU_ReadAccY(), IMU_ReadAccZ()) > 1.5) {
     //Serial.println(IMU_CalcAccVec);
-    //currentMode = MODE4;
-    ResetCanvas();
+    currentMode = MODE4;
+    //ResetCanvas();
   }
-    
+
   mainloop(currentMode);
-
-
 }
-
