@@ -31,7 +31,7 @@ void GyroInit(){
     avelx0 +=avelx;
     avely0 +=avely;
     avelz0 +=avelz;
-    Serial.print("x");
+    Serial.print(".");
   }
   
     avelx0 = avelx0/100;
@@ -192,8 +192,8 @@ void Serial_main(){
     char receivedChar = Serial.read(); // 1バイト読み取り
 
     if (receivedChar == 's') { // もし受信したデータが's'なら
-        SaveCSV();
-        Serial.println("Done!");  
+        //SaveCSV();
+        Serial.println("no command");  
     }
     if (receivedChar == 'l') { // もし受信したデータが'l'ならラベル+1
         label++;
@@ -212,6 +212,7 @@ void Serial_main(){
   }
 }
 //CSVにセーブする
+/*
 void SaveCSV(){
   char filename[16];
   sprintf(filename, "%01d%03d.csv", label, number);
@@ -232,3 +233,4 @@ void SaveCSV(){
   myFile.close();
   number++;
 }
+*/
