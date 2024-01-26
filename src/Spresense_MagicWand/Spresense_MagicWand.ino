@@ -32,9 +32,7 @@
 
 
 #define RECORD_MODE 0  //0:推論モード,1:学習モード
-//SD
-//#include <SDHCI.h>
-//SDClass SD;
+
 #include <File.h>
 #include <Flash.h>
 //IMU
@@ -114,59 +112,6 @@ bool _InitCondition = false;    //初期化状態
 bool _DeinitCondition = false;  //終了時状態
 
 
-//Audio
-/*
-#include <Audio.h>
-AudioClass *theAudio;
-bool ErrEnd = false;
-
-static void audio_attention_cb(const ErrorAttentionParam *atprm) {
-  puts("Attention!");
-
-  if (atprm->error_code >= AS_ATTENTION_CODE_WARNING) {
-    ErrEnd = true;
-  }
-}
-*/
-
-/*
-File myFile;
-bool audio = false;
-void PlaySound(int i) {
-  //
-  if (i == 1) myFile = SD.open("audio1.mp3");
-  else if (i == 2) myFile = SD.open("audio2.mp3");
-  else if (i == 3) myFile = SD.open("audio3.mp3");
-
-  if (!myFile) {
-    printf("File open error\n");
-    exit(1);
-  }
-  Serial.println(myFile.name());
-
-  // Send first frames to be decoded
-  err_t err = theAudio->writeFrames(AudioClass::Player0, myFile);
-
-  if (err == AUDIOLIB_ECODE_FILEEND) {
-    theAudio->stopPlayer(AudioClass::Player0);
-  }
-  if ((err != AUDIOLIB_ECODE_OK) && (err != AUDIOLIB_ECODE_FILEEND)) {
-    printf("File Read Error! =%d\n", err);
-    myFile.close();
-    exit(1);
-  }
-
-
-  // Main volume set -1020 to 120
-  theAudio->setVolume(120);
-
-  theAudio->startPlayer(AudioClass::Player0);
-  audio = true;
-
-  myFile.close();
-  //usleep(40000);
-}
-*/
 int CheckCommand() {
   float *dnnbuf = input.data();
   int count = 0;
@@ -226,19 +171,8 @@ void setup() {
   //タイマ割り込み
   attachTimerInterrupt(TimerInterruptFunction, INTERVAL);
   
-  //CANVAS(tft,w,h,x,y)
-  //canvas1 = new CANVAS(&tft,80,40,20,240);      //ToFText
-  //canvas2 = new CANVAS(&tft,20,40,0,240);       //ToFドット
-  //canvas3 = new CANVAS(&tft,140,40,100,240);    //グラフ
   canvas4 = new CANVAS(&tft,240,240,0,0);    //杖軌跡
-  //canvas5 = new CANVAS(&tft,240,280,0,280);   //テキスト
-  //canvas6 = new CANVAS(&tft,140,40,100,240);      //Text
-/*
-  //ToF
-  SPI5.begin();
-  SPI5.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
-  TOF_Init();
-*/
+
   //IMU
   IMU_Init();
 
@@ -254,60 +188,20 @@ void setup() {
 
   //SD->Flash
   Flash.begin();
-  //USB MSC
-  /*
-  if (SD.beginUsbMsc()) {
-    Serial.println("USB MSC Failure!");
-  } else {
-    Serial.println("*** USB MSC Prepared! ***");
-    Serial.println("Insert SD and Connect Extension Board USB to PC.");
-  }
-  */
+
   //DNN
   File nnbfile = Flash.open("model.nnb");
   int ret = dnnrt.begin(nnbfile);
   if (ret < 0) {
     Serial.println("dnnrt.begin failed" + String(ret));
   }
-  /*
-  //Audio
-  theAudio = AudioClass::getInstance();
-  theAudio->begin(audio_attention_cb);
-  puts("initialization Audio Library");
-  // Set clock mode to normal ハイレゾかノーマルを選択
-  theAudio->setRenderingClockMode(AS_CLKMODE_NORMAL);
-  //select LINE OUT
-  theAudio->setPlayerMode(AS_SETPLAYER_OUTPUTDEVICE_SPHP, AS_SP_DRV_MODE_LINEOUT);
-  //init player DSPファイルはmicroSD カードの場合は "/mnt/sd0/BIN" を、SPI-Flash の場合は "/mnt/spif/BIN" を指定します。
-  err_t err = theAudio->initPlayer(AudioClass::Player0, AS_CODECTYPE_MP3, "/mnt/sd0/BIN", AS_SAMPLINGRATE_AUTO, AS_CHANNEL_STEREO);
-  // Verify player initialize
-  if (err != AUDIOLIB_ECODE_OK) {
-    printf("Player0 initialize error\n");
-    exit(1);
-  }
-  */
-}
 
+}
 
 void CANVAS_main() {
-  //ToFセンサテキスト描画
-  //int *range = TOF_ReadDistance3d();
-  //canvas1->StringDrawL(String(TOF_ReadDistance()) + "mm", TFT_WHITE);
-  //ToFセンサドット描画
-  //canvas2->DotDraw(range);
-  //姿勢グラフ描画
-  //float value1[] = {roll,pitch,heading};
-  //canvas3->GraphDraw(value1);
   //杖軌跡描画
   canvas4->WandDraw28(heading, roll);
-  //IMU,地磁気センサ値テキスト描画
-  //canvas5->StringDraw("aX=" + String(IMU_ReadAccX()) + ",aY=" + String(IMU_ReadAccY()) + ",aZ=" + String(IMU_ReadAccZ()) + "\ngX=" + String(IMU_ReadGyroX()) + ",gY=" + String(IMU_ReadGyroY()) + ",gZ=" + String(IMU_ReadGyroZ()) + "\nmX=" + String(mx) + ",mY=" + String(my) + ",mZ=" + String(mz), TFT_YELLOW);
-  //
-  //canvas6->StringDrawL(String(labels[command]) + "", TFT_WHITE);
 }
-
-
-
 
 void mainloop(MODE m) {
   //前回実行時からモードが変わってたら終了処理
@@ -407,25 +301,6 @@ void InitFunction(MODE m) {  //初回呼ぶ
   startTime = millis();
   _InitCondition = true;  //初回フラグon
 }
-/*
-void Audio_main() {
-  int err = theAudio->writeFrames(AudioClass::Player0, myFile);
-  //  Tell when player file ends 
-  if (err == AUDIOLIB_ECODE_FILEEND) {
-    //printf("Main player File End!\n");
-  }
-
-  // Show error code from player and stop
-  if (err) {
-    //printf("Main player error code: %d\n", err);
-    if (audio == true) {
-      theAudio->stopPlayer(AudioClass::Player0);
-      myFile.close();
-      audio = false;
-    }
-  }
-}
-*/
 
 void loop() {
 
