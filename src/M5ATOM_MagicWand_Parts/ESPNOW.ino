@@ -58,8 +58,6 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   //Serial.println("");
 }
 
-//mode;modeselect:0,activemode:1
-//num:uzurium_num
 //
 void send_data(int mode,int value1,int value2,int value3,int value4){
     uint8_t data[5] = {mode,value1,value2,value3,value4};
