@@ -152,11 +152,6 @@ void loop() {
   }
 
   mainloop(currentMode);
-  
-//  leds[0] = CRGB::Red;                      // LED[0]を赤に設定
-//  FastLED.show();                           // LEDを表示
-//  FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);   // RGB LEDを初期設定
-//  FastLED.setBrightness(20);                               // 明るさを設定（20以上は熱で壊れる可能性あり。）
 
 
   if (IrReceiver.decode()) {
@@ -168,11 +163,6 @@ void loop() {
     }
     IrReceiver.resume();
   }
-//   if(M5.Btn.wasPressed()){
-// //  IrSender.sendSony(0x1,0x15,1);
-//     //IrSender.sendPulseDistanceWidthFromArray(); //Protocol=PulseDistance Repeat gap=75250us Raw-Data=0x10809522C 40 bits LSB first
-//     IrSender.sendNEC(0xEF00,0x3,1);
-//   }
 
 
 }
