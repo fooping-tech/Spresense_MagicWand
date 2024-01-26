@@ -211,26 +211,3 @@ void Serial_main(){
 
   }
 }
-//CSVにセーブする
-/*
-void SaveCSV(){
-  char filename[16];
-  sprintf(filename, "%01d%03d.csv", label, number);
-  SD.remove(filename);
-  File myFile = SD.open(filename, FILE_WRITE);
-
-  for (int i=0;i<28;i++) {
-    for (int j=0;j<28;j++) {
-      myFile.print(canvas4->output[i + 28 * j]);
-      //Serial.print(canvas4->output[i + 28 * j]);
-      myFile.print(",");
-      //Serial.print(",");
-    }
-    myFile.println("");
-    //Serial.println("");
-  }
-  Serial.printf("%01d%03d.csv", label, number);
-  myFile.close();
-  number++;
-}
-*/
