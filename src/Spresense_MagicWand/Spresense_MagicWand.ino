@@ -32,7 +32,8 @@ SDClass  SD;
 #include <File.h>
 
 //IMU
-#include "Arduino_BMI270_BMM150.h"
+#include "BMI270_Arduino.h"
+BMI270Class BMI270;
 
 //TFT
 #define TFT_LED 8       //LED接続端子
@@ -176,10 +177,37 @@ int CheckCommand(){
   return index;
 }
 
+void Audio_Init(){
+  theAudio = AudioClass::getInstance();
+  theAudio->begin(audio_attention_cb);
+  Serial.println("initialization Audio Library");
+  // Set clock mode to normal ハイレゾかノーマルを選択
+  theAudio->setRenderingClockMode(AS_CLKMODE_NORMAL);
+  Serial.println("ClockModeSetting Done!");
+
+  //theAudio->setReadyMode();
+  //select LINE OUT
+  theAudio->setPlayerMode(AS_SETPLAYER_OUTPUTDEVICE_SPHP, AS_SP_DRV_MODE_LINEOUT);
+  Serial.println("SetPlayerMode Done!");
+  //init player DSPファイルはmicroSD カードの場合は "/mnt/sd0/BIN" を、SPI-Flash の場合は "/mnt/spif/BIN" を指定します。
+  err_t err = theAudio->initPlayer(AudioClass::Player0, AS_CODECTYPE_MP3, "/mnt/sd0/BIN", AS_SAMPLINGRATE_AUTO, AS_CHANNEL_STEREO);
+  Serial.println("initPlayer Done!");
+  // Verify player initialize 
+  if (err != AUDIOLIB_ECODE_OK)
+    {
+      Serial.println("Player0 initialize error\n");
+      exit(1);
+    }
+}
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  //Audio
+  Audio_Init();
+  //IMU
+  IMU_Init();
+
   //TFT
   TFT_Init();
   
@@ -217,35 +245,19 @@ void setup() {
   SPI5.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
   TOF_Init();
 
-  //IMU
-  IMU_Init();
 
   //AK09918
-  AK09918_Init();
+  //AK09918_Init();
 
   //ジャイロセンサ
   GyroInit();
 
   //MadgWick
   MadgWick_Init();
+  
 
-  //Audio
-  theAudio = AudioClass::getInstance();
-  theAudio->begin(audio_attention_cb);
-  puts("initialization Audio Library");
-  /* Set clock mode to normal ハイレゾかノーマルを選択*/
-  theAudio->setRenderingClockMode(AS_CLKMODE_NORMAL);
-  /*select LINE OUT */
-  theAudio->setPlayerMode(AS_SETPLAYER_OUTPUTDEVICE_SPHP, AS_SP_DRV_MODE_LINEOUT);
-  /*init player DSPファイルはmicroSD カードの場合は "/mnt/sd0/BIN" を、SPI-Flash の場合は "/mnt/spif/BIN" を指定します。*/
-  err_t err = theAudio->initPlayer(AudioClass::Player0, AS_CODECTYPE_MP3, "/mnt/sd0/BIN", AS_SAMPLINGRATE_AUTO, AS_CHANNEL_STEREO);
-  /* Verify player initialize */
-  if (err != AUDIOLIB_ECODE_OK)
-    {
-      printf("Player0 initialize error\n");
-      exit(1);
-    }
-    
+
+  Serial.println("Setup_Finished!!");
 }
 
 
@@ -279,27 +291,27 @@ void mainloop(MODE m){
   spentTime = millis() - startTime;
 
   if(deltaTime >= TaskSpan){
-//    Serial.println("mainloop");
+    //Serial.println("mainloop");
     if(!_InitCondition){//未初期化時実行
-//      Serial.println("Init");
+      //Serial.println("Init");
       InitFunction(m);
     }else if(_DeinitCondition){//修了処理時実行
-//      Serial.println("Deinit");
+      //Serial.println("Deinit");
       DeinitFunction();
     }else{
-//      Serial.println("main()");
+      //Serial.println("main()");
         //モードごとの処理
     switch (m) {
       case MODE1:
-        //TOF_SetLED(255,255,255);      
+        TOF_SetLED(255,255,255);      
         break;
 
       case MODE2:
-        //TOF_SetLED(255,0,0);
+        TOF_SetLED(255,0,0);
         break;
 
       case MODE3:
-        //TOF_SetLED(0,255,0);
+        TOF_SetLED(0,255,0);
         currentMode = MODE4;
         
         break;
@@ -375,11 +387,11 @@ void Audio_main(){
 void loop() {
   IMU_main();         //IMUセンサ値更新
   TOF_main();         //TOFセンサ値更新
-  AK09918_main();     //地磁気センサ更新
+  //AK09918_main();     //地磁気センサ更新
   CANVAS_main();      //描画更新
   if(RECORD_MODE == 0)command = CheckCommand(); //DNN
   SW_main();         //ボタンチェック(押下時Reset処理)
-  Audio_main();      //オーディオ
+  //Audio_main();      //オーディオ
   Serial_main();      //Arduinoシリアル操作
 
   //モード起動時処理
@@ -402,8 +414,8 @@ void loop() {
   mainloop(currentMode);
 
   //所定の加速度より早い場合キャンバスを消す
-  if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>1.5){
-    //Serial.println(IMU_CalcAccVec);
+  if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*1.5){
+    Serial.println(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ()));
     //currentMode = MODE4;
     ResetCanvas();
   }
