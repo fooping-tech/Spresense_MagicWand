@@ -312,12 +312,11 @@ void mainloop(MODE m){
 
       case MODE3:
         TOF_SetLED(0,255,0);
-        currentMode = MODE4;
-        
+        //currentMode = MODE4;
         break;
 
       case MODE4:
-        TOF_SetLED(0,0,0);
+        //TOF_SetLED(0,0,0);
         break;
       }
       
@@ -341,22 +340,22 @@ void InitFunction(MODE m){//初回呼ぶ
   //モードごとの処理
   switch (m) {
   case MODE1:
-    TOF_SetLED(255,255,255);
-    PlaySound(1);
+    //TOF_SetLED(255,255,255);
+    //PlaySound(1);
     break;
 
   case MODE2:
-    TOF_SetLED(255,0,0);
-    PlaySound(2);
+    //TOF_SetLED(255,0,0);
+    //PlaySound(2);
     break;
 
   case MODE3:
-    TOF_SetLED(0,255,0);
-    PlaySound(3);
+    //TOF_SetLED(0,255,0);
+    //PlaySound(3);
     break;
 
   case MODE4:
-    TOF_SetLED(0,0,0);
+    //TOF_SetLED(0,0,0);
     break;
 }
   startTime = millis();
@@ -364,11 +363,13 @@ void InitFunction(MODE m){//初回呼ぶ
 }
 
 void Audio_main(){
+  //loopの中で呼び出してバッファに補充する
   int err = theAudio->writeFrames(AudioClass::Player0, myFile);
   /*  Tell when player file ends */
   if (err == AUDIOLIB_ECODE_FILEEND)
     {
       //printf("Main player File End!\n");
+
     }
 
   /* Show error code from player and stop */
@@ -390,23 +391,47 @@ void loop() {
   //AK09918_main();     //地磁気センサ更新
   CANVAS_main();      //描画更新
   if(RECORD_MODE == 0)command = CheckCommand(); //DNN
-  SW_main();         //ボタンチェック(押下時Reset処理)
-  //Audio_main();      //オーディオ
+  //SW_main();         //ボタンチェック(押下時Reset処理)
+  Audio_main();      //オーディオ
   Serial_main();      //Arduinoシリアル操作
 
   //モード起動時処理
   if(RECORD_MODE == 0){
-    if(IMU_CheckAccActive()&& TOF_ReadDistance()>50){
+    if(command==0){
+      currentMode = MODE1;
+      TOF_SetLED(255,255,255);
+    }
+    if(command==1){
+      currentMode = MODE2;
+      TOF_SetLED(255,0,0);
+    }
+    if(command==2){
+      currentMode = MODE3;
+      TOF_SetLED(0,0,255);
+    }
+    if(command==3){
+      currentMode = MODE4;
+      TOF_SetLED(0,0,0);
+    }
+    
+    if(SW_Check()){
       if(command==0){
         currentMode = MODE1;
+        PlaySound(1);
         ResetCanvas();
       }
       if(command==1){
         currentMode = MODE2;
+        PlaySound(2);
         ResetCanvas();
       }
       if(command==2){
         currentMode = MODE3;
+        PlaySound(3);
+        ResetCanvas();
+      }
+      if(command==3){
+        currentMode = MODE4;
         ResetCanvas();
       }
     }
@@ -415,7 +440,7 @@ void loop() {
 
   //所定の加速度より早い場合キャンバスを消す
   if(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ())>9.8*1.5){
-    Serial.println(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ()));
+    //Serial.println(IMU_CalcAccVec(IMU_ReadAccX(),IMU_ReadAccY(),IMU_ReadAccZ()));
     //currentMode = MODE4;
     ResetCanvas();
   }

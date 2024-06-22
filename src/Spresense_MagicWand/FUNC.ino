@@ -181,6 +181,10 @@ void SW_main(){
   }
 }
 
+bool SW_Check(){
+  return switch1->check_change();
+}
+
 //--------------------------------------
 //  Record Functions
 //--------------------------------------
