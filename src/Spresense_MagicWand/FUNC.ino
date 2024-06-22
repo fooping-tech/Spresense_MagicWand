@@ -31,7 +31,7 @@ void GyroInit(){
     avelx0 +=avelx;
     avely0 +=avely;
     avelz0 +=avelz;
-    Serial.print("x");
+    Serial.print(".");
   }
   
     avelx0 = avelx0/100;
